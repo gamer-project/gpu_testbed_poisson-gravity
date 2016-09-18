@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -N PoissonGravitySolver.3.0.1
+#PBS -M b88202011@ntu.edu.tw
+#PBS -m abe
+#PBS -k oe
+#PBS -q work
+#PBS -l nodes=1:ppn=1
+
+cd $PBS_O_WORKDIR
+time ./PoissonGravity -P 1>./stdout 2>./stderr
