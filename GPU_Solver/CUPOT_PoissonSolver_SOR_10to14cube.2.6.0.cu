@@ -25,14 +25,14 @@
 #include "CUPOT_PoissonSolver_SetConstMem.cu"
 
 // use shuffle reduction
-#	define USE_SHUFFLE 
+#       define USE_SHUFFLE 
 #ifdef USE_SHUFFLE
 #include "CUPOT_shuffle_reduction.cu"
 #endif
 
 // use padding (right now optimized for POT_GHOST_SIZE == 5)
 #if POT_GHOST_SIZE == 5
-#	define USE_PADDING
+#       define USE_PADDING
 #endif
 
 // frequency of reduction
@@ -94,13 +94,13 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    uint pad_dy_0  = (warpID >=  8 && warpID <= 15) ? (dy + 12) : dy; // padding
    uint pad_dy_1  = (warpID >= 16 && warpID <= 23) ? (dy + 12) : dy; // padding 
    uint pad_dz    = dz + 12 * 4; // padding
-   uint pad_pot	  = (tid_y < 2) ? 0 : 12 * ((tid_y - 2) / 4 + 1);
+   uint pad_pot   = (tid_y < 2) ? 0 : 12 * ((tid_y - 2) / 4 + 1);
 #else
    const uint dPotID    = __umul24( bdim_z, POT_NXT_F*POT_NXT_F);
    uint pad_dy_0    = dy;
    uint pad_dy_1    = dy;
-   uint pad_dz 	  = dz;
-   uint pad_pot	  = 0;
+   uint pad_dz    = dz;
+   uint pad_pot   = 0;
 #endif
    const uint PotID0    = pad_pot + __umul24( 1+tid_z, pad_dz ) + __umul24( 1+tid_y, dy ) + ( tid_x << 1 ) + 1;
    
@@ -125,7 +125,7 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
 #  endif
 
 /* if(tid_x == 0)
-	printf("%d ", RHO_NXT); */ // RHO_NXT == 16
+        printf("%d ", RHO_NXT); */ // RHO_NXT == 16
 
 // a1. load the fine-grid density into the shared memory
 // -----------------------------------------------------------------------------------------------------------
@@ -174,11 +174,11 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
       const int FIDy = ( (CIDy-1)<<1 ) - POT_USELESS;
       int       FIDz = ( (CIDz-1)<<1 ) - POT_USELESS;
 #ifdef USE_PADDING
-	  int       Fpad = ( FIDy <  3 ) ? 0 : (12 * ((FIDy - 3)/4 + 1)); // padding logic
-	  const int Fdz  = POT_NXT_F*POT_NXT_F + 12 * 4; // added padding
+          int       Fpad = ( FIDy <  3 ) ? 0 : (12 * ((FIDy - 3)/4 + 1)); // padding logic
+          const int Fdz  = POT_NXT_F*POT_NXT_F + 12 * 4; // added padding
 #else
-	  int 		Fpad = 0;
-	  const int Fdz  = POT_NXT_F*POT_NXT_F;
+          int           Fpad = 0;
+          const int Fdz  = POT_NXT_F*POT_NXT_F;
 #endif
       int       FID  = Fpad + __mul24( FIDz, Fdz ) + __mul24( FIDy, Fdy ) + __mul24( FIDx, Fdx );
  
@@ -372,18 +372,18 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
 //    (c2). perform the reduction operation to get the one-norm of residual
 //    ==============================================================================
 //    sum up the elements larger than FloorPow2 to ensure that the number of remaining elements is power-of-two
-	  if(Iter+1 >= Min_Iter && Iter % MOD_REDUCTION == 0)
-	  {
-		  
+          if(Iter+1 >= Min_Iter && Iter % MOD_REDUCTION == 0)
+          {
+                  
       if ( ID < Remain )   s_Residual_Total[ID] += s_Residual_Total[ ID + FloorPow2 ];
 
 
-#	  ifdef USE_SHUFFLE
-// 	  parallel reduction with shuffling
-	  real shuffle_val = s_Residual_Total[ID];
-	  shuffle_val = blockReduceSum(shuffle_val, ID);
-	  if(ID == 0) s_Residual_Total[0] = shuffle_val;
-	  __syncthreads();
+#         ifdef USE_SHUFFLE
+//        parallel reduction with shuffling
+          real shuffle_val = s_Residual_Total[ID];
+          shuffle_val = blockReduceSum(shuffle_val, ID);
+          if(ID == 0) s_Residual_Total[0] = shuffle_val;
+          __syncthreads();
 #else
 //    parallel reduction
 #     if ( POT_NTHREAD >= 2048 )
@@ -428,8 +428,8 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
       if ( s_Residual_Total[0] > Residual_Total_Old )    break;
 
       Residual_Total_Old = s_Residual_Total[0];   
-	  
-	  }// if Iter+1 >= Min_Iter
+          
+          }// if Iter+1 >= Min_Iter
       __syncthreads();
 
    } // for (int Iter=0; Iter<Max_Iter; Iter++)
@@ -442,7 +442,7 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    uint dy_global = t % (GRA_NXT*GRA_NXT)/GRA_NXT;
    uint pad_global = (dy_global < 3)? 12: 12 + 12 * ((dy_global-3)/4 + 1);
 #else
-	uint pad_global = 0;
+        uint pad_global = 0;
 #endif
 
    do
@@ -450,7 +450,7 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
       s_index =   __umul24(  t/(GRA_NXT*GRA_NXT)         + POT_GHOST_SIZE - GRA_GHOST_SIZE,  pad_dz  ) 
                 + __umul24(   t % (GRA_NXT*GRA_NXT)/GRA_NXT + POT_GHOST_SIZE - GRA_GHOST_SIZE,  dy  )
                 +            t%(GRA_NXT        )         + POT_GHOST_SIZE - GRA_GHOST_SIZE
-				+ pad_global;
+                                + pad_global;
 
       g_Pot_Array_Out[bid][t] = s_FPot[s_index];
 

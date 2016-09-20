@@ -4,13 +4,13 @@
 
 #if ( defined GRAVITY  &&  defined GPU )
 
-	
+        
 //-------------------------------------------------------------------------------------------------------
 // Function    :  blockReduceSum 
 // Description :  GPU reduction using register shuffling. Sums up the elements in one warp
 //
-// Note        :  a. increases reduction speed by using registers
-//				  b. reference: https://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
+// Note        :  1. Increases reduction speed by using registers
+//                2. Reference: https://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
 //
 // Parameter   :  val   : the value that each thread holds that will be added together
 //
@@ -28,8 +28,8 @@ real warpReduceSum(real val)
 // Function    :  blockReduceSum 
 // Description :  GPU reduction using register shuffling. Sums up the elements in one block.
 //
-// Note        :  a. increases reduction speed by using registers
-//				  b. reference: https://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
+// Note        :  1. Increases reduction speed by using registers
+//                2. Reference: https://devblogs.nvidia.com/parallelforall/faster-parallel-reductions-kepler/
 //
 // Parameter   :  val   : the value that each thread holds that will be added together
 //                ID    : index of each individual thread
@@ -45,7 +45,7 @@ real blockReduceSum(real val, int ID)
   int wid = ID / warpSize;
 
   if(ID < blockDim.x * blockDim.y * blockDim.z)
-	val = warpReduceSum(val); 
+        val = warpReduceSum(val); 
 
   // Write reduced value to shared memory
   if (lane==0) shared[wid]=val; 
