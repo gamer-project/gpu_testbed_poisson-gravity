@@ -54,12 +54,15 @@ __inline__ __device__
 real BlockReductionWithShuffle( real val, const int ID )
 {
 
-   const int lane         = ID % warpSize;         // local lane ID within a warp [0 ... warpSize-1]
-   const int wid          = ID / warpSize;         // warp ID
+// const int lane         = ID % warpSize;         // local lane ID within a warp [0 ... warpSize-1]
+// const int wid          = ID / warpSize;         // warp ID
+   const int lane         = ID & 0x1f;             // optimized for warpSize == 32
+   const int wid          = ID >> 5;               // optimized for warpSize == 32
    const int MaxNWarp     = 32;                    // maximum number of warps allowed == MaxBlockSize/warpSize == 1024/32 == 32
                                                    // --> all current compute capabilities have MaxBlockSize==1024 warpSize==32
-   const int NWarp        = POT_NTHREAD/warpSize;  // actual number of warps (which must be <= warpSize since we apply the
+// const int NWarp        = POT_NTHREAD/warpSize;  // actual number of warps (which must be <= warpSize since we apply the
                                                    // final reduce only to the first warp)
+   const int NWarp        = POT_NTHREAD >> 5;      // optimized for warpSize == 32
 
    static __shared__ real shared[MaxNWarp];        // maximum shared memory required for 32 partial sums (must be <= warpSize)
 

@@ -431,7 +431,7 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
          if ( ID <  64 )   s_Residual_Total[ID] += s_Residual_Total[ ID +  64 ];    __syncthreads();
 #        endif
 
-//       adopting warp-synchronous mechanism
+//       adopting warp-synchronous mechanism (assuming warpSize == 32)
          if ( ID < 32 )
          {
 //          declare volatile pointer to ensure that the operations are not reordered
