@@ -1,6 +1,7 @@
 #include "Copyright.h"
 #include "Macro.h"
 #include "CUPOT.h"
+//#include "stdio.h"
 
 #if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR  &&  defined USE_PSOLVER_10TO14 )
 
@@ -16,14 +17,26 @@
 #endif
 
 // for single precision, we can save coarse-grid potential into shared memory for higher performance
-#if ( !defined FLOAT8  &&  GPU_ARCH != KEPLER )
+#if ( !defined FLOAT8   &&  GPU_ARCH != KEPLER  && GPU_ARCH != MAXWELL && GPU_ARCH != PASCAL)
 #  define CPOT_SHARED
 #endif
 
 // variables reside in constant memory
 #include "CUPOT_PoissonSolver_SetConstMem.cu"
 
+// use shuffle reduction
+#	define USE_SHUFFLE 
+#ifdef USE_SHUFFLE
+#include "CUPOT_shuffle_reduction.cu"
+#endif
 
+// use padding (right now optimized for POT_GHOST_SIZE == 5)
+#if POT_GHOST_SIZE == 5
+#	define USE_PADDING
+#endif
+
+// frequency of reduction
+#define MOD_REDUCTION 2
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -68,36 +81,57 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    const uint dx        = 1;
    const uint dy        = POT_NXT_F;
    const uint dz        = POT_NXT_F*POT_NXT_F;
-   const uint PotID0    = __umul24( 1+tid_z, dz ) + __umul24( 1+tid_y, dy ) + ( tid_x << 1 ) + 1;
-   const uint RhoID0    = __umul24( tid_z, RHO_NXT*RHO_NXT ) + __umul24( tid_y, RHO_NXT )+ ( tid_x << 1 );
    const uint DispEven  = ( tid_y + tid_z ) & 1;
    const uint DispOdd   = DispEven^1;
    const uint DispFlip  = bdim_z & 1;
-   const uint dPotID    = __umul24( bdim_z, POT_NXT_F*POT_NXT_F );
+   const uint RhoID0    = __umul24( tid_z, RHO_NXT*RHO_NXT ) + __umul24( tid_y, RHO_NXT )+ ( tid_x << 1 );
    const uint dRhoID    = __umul24( bdim_z, RHO_NXT  *RHO_NXT   );
    const uint FloorPow2 = 1<<(31-__clz(POT_NTHREAD) ); // largest power-of-two value not greater than POT_NTHREAD
    const uint Remain    = POT_NTHREAD - FloorPow2;
-
+#ifdef USE_PADDING
+   const uint dPotID    = __umul24( bdim_z, POT_NXT_F*POT_NXT_F + 12 * 4 );
+   const uint warpID    = ID % warpSize;
+   uint pad_dy_0  = (warpID >=  8 && warpID <= 15) ? (dy + 12) : dy; // padding
+   uint pad_dy_1  = (warpID >= 16 && warpID <= 23) ? (dy + 12) : dy; // padding 
+   uint pad_dz    = dz + 12 * 4; // padding
+   uint pad_pot	  = (tid_y < 2) ? 0 : 12 * ((tid_y - 2) / 4 + 1);
+#else
+   const uint dPotID    = __umul24( bdim_z, POT_NXT_F*POT_NXT_F);
+   uint pad_dy_0    = dy;
+   uint pad_dy_1    = dy;
+   uint pad_dz 	  = dz;
+   uint pad_pot	  = 0;
+#endif
+   const uint PotID0    = pad_pot + __umul24( 1+tid_z, pad_dz ) + __umul24( 1+tid_y, dy ) + ( tid_x << 1 ) + 1;
+   
    uint ip, im, jp, jm, kp, km, t, s_index;
    uint PotID, RhoID, DispPotID, DispRhoID, Disp;
    real Residual, Residual_Total_Old;
 
    __shared__ real s_Residual_Total[POT_NTHREAD];
-   __shared__ real s_FPot[ POT_NXT_F*POT_NXT_F*POT_NXT_F ];
+
+#ifdef USE_PADDING
+   __shared__ real s_FPot[ POT_NXT_F*POT_NXT_F*POT_NXT_F + 12*4*POT_NXT_F];
+#else
+   __shared__ real s_FPot[ POT_NXT_F*POT_NXT_F*POT_NXT_F];
+#endif  
+   
 #  ifdef CPOT_SHARED
    __shared__ real s_CPot[ POT_NXT  *POT_NXT  *POT_NXT   ];
 #  endif
+
 #  ifdef RHO_SHARED
-   __shared__ real s_Rho_Array[ RHO_NXT*RHO_NXT*RHO_NXT ];
+   __shared__ real s_Rho_Array[ RHO_NXT*RHO_NXT*RHO_NXT];
 #  endif
 
-
+/* if(tid_x == 0)
+	printf("%d ", RHO_NXT); */ // RHO_NXT == 16
 
 // a1. load the fine-grid density into the shared memory
 // -----------------------------------------------------------------------------------------------------------
 #  ifdef RHO_SHARED
    t = ID;
-   do {  s_Rho_Array[t] = g_Rho_Array[bid][t];  t += POT_NTHREAD; }     while ( t < RHO_NXT*RHO_NXT*RHO_NXT );
+   do {  s_Rho_Array[t] = g_Rho_Array[bid][t];  t += (POT_NTHREAD);}     while ( t < RHO_NXT*RHO_NXT*RHO_NXT);
    __syncthreads();
 #  else
    const real *s_Rho_Array = g_Rho_Array[bid];
@@ -134,15 +168,20 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
       const int CIDy = 1 + (  ID % ( (POT_NXT-2)*(POT_NXT-2) )  ) / ( POT_NXT-2 );
       const int CIDz = 1 + ID / ( (POT_NXT-2)*(POT_NXT-2) );
       int       CID  = __mul24( CIDz, Cdz ) + __mul24( CIDy, Cdy ) + __mul24( CIDx, Cdx );
-
       const int Fdx  = 1;
       const int Fdy  = POT_NXT_F;
-      const int Fdz  = POT_NXT_F*POT_NXT_F;
       const int FIDx = ( (CIDx-1)<<1 ) - POT_USELESS;
       const int FIDy = ( (CIDy-1)<<1 ) - POT_USELESS;
       int       FIDz = ( (CIDz-1)<<1 ) - POT_USELESS;
-      int       FID  = __mul24( FIDz, Fdz ) + __mul24( FIDy, Fdy ) + __mul24( FIDx, Fdx );
-
+#ifdef USE_PADDING
+	  int       Fpad = ( FIDy <  3 ) ? 0 : (12 * ((FIDy - 3)/4 + 1)); // padding logic
+	  const int Fdz  = POT_NXT_F*POT_NXT_F + 12 * 4; // added padding
+#else
+	  int 		Fpad = 0;
+	  const int Fdz  = POT_NXT_F*POT_NXT_F;
+#endif
+      int       FID  = Fpad + __mul24( FIDz, Fdz ) + __mul24( FIDy, Fdy ) + __mul24( FIDx, Fdx );
+ 
       real TempFPot1, TempFPot2, TempFPot3, TempFPot4, TempFPot5, TempFPot6, TempFPot7, TempFPot8;
       real Slope_00, Slope_01, Slope_02, Slope_03, Slope_04, Slope_05, Slope_06, Slope_07;
       real Slope_08, Slope_09, Slope_10, Slope_11, Slope_12;
@@ -278,7 +317,9 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
 // -----------------------------------------------------------------------------------------------------------
    Residual_Total_Old = __FLT_MAX__;
 
-   for (uint Iter=0; Iter<Max_Iter; Iter++)
+   //real s_Rho = s_Rho_Array[RhoID + ]
+   uint Iter;
+   for (Iter=0; Iter < Max_Iter ; Iter++)
    {
 
 //    (c1). evaluate residual, update potential
@@ -297,11 +338,11 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
             DispRhoID = RhoID + Disp;
 
             ip = DispPotID + dx;
-            jp = DispPotID + dy;
-            kp = DispPotID + dz;
+            jp = DispPotID + pad_dy_0;
+            kp = DispPotID + pad_dz;
             im = DispPotID - dx;
-            jm = DispPotID - dy;
-            km = DispPotID - dz;
+            jm = DispPotID - pad_dy_1;
+            km = DispPotID - pad_dz;
 
 
 //          evaluate the residual 
@@ -327,12 +368,23 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
 
       } // for (int pass=0; pass<2; pass++)
 
-
+  
 //    (c2). perform the reduction operation to get the one-norm of residual
 //    ==============================================================================
 //    sum up the elements larger than FloorPow2 to ensure that the number of remaining elements is power-of-two
+	  if(Iter+1 >= Min_Iter && Iter % MOD_REDUCTION == 0)
+	  {
+		  
       if ( ID < Remain )   s_Residual_Total[ID] += s_Residual_Total[ ID + FloorPow2 ];
 
+
+#	  ifdef USE_SHUFFLE
+// 	  parallel reduction with shuffling
+	  real shuffle_val = s_Residual_Total[ID];
+	  shuffle_val = blockReduceSum(shuffle_val, ID);
+	  if(ID == 0) s_Residual_Total[0] = shuffle_val;
+	  __syncthreads();
+#else
 //    parallel reduction
 #     if ( POT_NTHREAD >= 2048 )
 #     error : ERROR : POT_NTHREAD must < 2048 !!
@@ -368,28 +420,37 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
          s_Sum[ID] += s_Sum[ID+ 1];
       }
       __syncthreads();
+#endif
 
 
 //    (c3). termination criterion
 //    ==============================================================================
-      if ( Iter+1 >= Min_Iter  &&  s_Residual_Total[0] > Residual_Total_Old )    break;
+      if ( s_Residual_Total[0] > Residual_Total_Old )    break;
 
-      Residual_Total_Old = s_Residual_Total[0];
-
+      Residual_Total_Old = s_Residual_Total[0];   
+	  
+	  }// if Iter+1 >= Min_Iter
       __syncthreads();
 
    } // for (int Iter=0; Iter<Max_Iter; Iter++)
 
-
-
 // d. store potential back to the global memory 
 // -----------------------------------------------------------------------------------------------------------
    t = ID;
+   
+#ifdef USE_PADDING
+   uint dy_global = t % (GRA_NXT*GRA_NXT)/GRA_NXT;
+   uint pad_global = (dy_global < 3)? 12: 12 + 12 * ((dy_global-3)/4 + 1);
+#else
+	uint pad_global = 0;
+#endif
+
    do
    { 
-      s_index =   __umul24(  t/(GRA_NXT*GRA_NXT)         + POT_GHOST_SIZE - GRA_GHOST_SIZE,  dz  ) 
-                + __umul24(  t%(GRA_NXT*GRA_NXT)/GRA_NXT + POT_GHOST_SIZE - GRA_GHOST_SIZE,  dy  )
-                +            t%(GRA_NXT        )         + POT_GHOST_SIZE - GRA_GHOST_SIZE;
+      s_index =   __umul24(  t/(GRA_NXT*GRA_NXT)         + POT_GHOST_SIZE - GRA_GHOST_SIZE,  pad_dz  ) 
+                + __umul24(   t % (GRA_NXT*GRA_NXT)/GRA_NXT + POT_GHOST_SIZE - GRA_GHOST_SIZE,  dy  )
+                +            t%(GRA_NXT        )         + POT_GHOST_SIZE - GRA_GHOST_SIZE
+				+ pad_global;
 
       g_Pot_Array_Out[bid][t] = s_FPot[s_index];
 

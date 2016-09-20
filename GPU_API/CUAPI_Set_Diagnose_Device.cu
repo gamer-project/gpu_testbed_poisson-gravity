@@ -3,21 +3,21 @@
 
 #if   ( POT_SCHEME == SOR )
 #ifdef USE_PSOLVER_10TO14
-__global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ], 
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ], 
+__global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
                                                           real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                                     const int Min_Iter, const int Max_Iter, const real Omega_6,
                                                     const real Const, const IntScheme_t IntScheme );
 #else
-__global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ], 
-                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ], 
+__global__ void CUPOT_PoissonSolver_SOR_16to18cube( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                                    const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
                                                           real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
-                                                    const int Min_Iter, const int Max_Iter, const real Omega_6, 
+                                                    const int Min_Iter, const int Max_Iter, const real Omega_6,
                                                     const real Const, const IntScheme_t IntScheme );
 #endif // #ifdef USE_PSOLVER_10TO14 ... else ...
 #elif ( POT_SCHEME == MG  )
-__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ], 
-                                        const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ], 
+__global__ void CUPOT_PoissonSolver_MG( const real g_Rho_Array    [][ RHO_NXT*RHO_NXT*RHO_NXT ],
+                                        const real g_Pot_Array_In [][ POT_NXT*POT_NXT*POT_NXT ],
                                               real g_Pot_Array_Out[][ GRA_NXT*GRA_NXT*GRA_NXT ],
                                         const real dh_Min, const int Max_Iter, const int NPre_Smooth,
                                         const int NPost_Smooth, const real Tolerated_Error, const real Poi_Coeff,
@@ -53,7 +53,7 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
 // verify that there are GPU supporing CUDA
    int DeviceCount;
    cudaGetDeviceCount( &DeviceCount );
-   if ( DeviceCount == 0 )   
+   if ( DeviceCount == 0 )
    {
       fprintf( stderr, "ERROR : no devices supporting CUDA at %8s !!\n", Host );
       exit(-1);
@@ -89,7 +89,7 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
       exit(-1);
    }
 
-// verify the capability of double precision 
+// verify the capability of double precision
 #  ifdef FLOAT8
    if ( DeviceProp.major < 2  &&  DeviceProp.minor < 3 )
    {
@@ -102,7 +102,7 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
 #  if   ( GPU_ARCH == FERMI )
    if ( DeviceProp.major != 2 )
    {
-      fprintf( stderr, "ERROR : the GPU \"%s\" is incompatible to the Fermi architecture (major revision = %d) !!\n", 
+      fprintf( stderr, "ERROR : GPU \"%s\" is incompatible to the Fermi architecture (major revision = %d) !!\n",
                DeviceProp.name, DeviceProp.major );
       MPI_Exit();
    }
@@ -110,7 +110,23 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
 #  elif ( GPU_ARCH == KEPLER )
    if ( DeviceProp.major != 3 )
    {
-      fprintf( stderr, "ERROR : the GPU \"%s\" is incompatible to the Kepler architecture (major revision = %d) !!\n", 
+      fprintf( stderr, "ERROR : GPU \"%s\" is incompatible to the Kepler architecture (major revision = %d) !!\n",
+               DeviceProp.name, DeviceProp.major );
+      MPI_Exit();
+   }
+
+#  elif ( GPU_ARCH == MAXWELL )
+   if ( DeviceProp.major != 5 )
+   {
+      fprintf( stderr, "ERROR : GPU \"%s\" is incompatible to the Maxwell architecture (major revision = %d) !!\n",
+               DeviceProp.name, DeviceProp.major );
+      MPI_Exit();
+   }
+
+#  elif ( GPU_ARCH == PASCAL )
+   if ( DeviceProp.major != 6 )
+   {
+      fprintf( stderr, "ERROR : GPU \"%s\" is incompatible to the Pascal architecture (major revision = %d) !!\n",
                DeviceProp.name, DeviceProp.major );
       MPI_Exit();
    }
@@ -125,12 +141,13 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
    else if ( DeviceProp.major == 2  &&  DeviceProp.minor == 1 )  NCorePerMP =  48;
    else if ( DeviceProp.major == 3 )                             NCorePerMP = 192;
    else if ( DeviceProp.major == 5 )                             NCorePerMP = 128;
+   else if ( DeviceProp.major == 6 )                             NCorePerMP = 64;
    else
-      fprintf( stderr, "WARNING : unable to determine then umber of cores per multiprocessor for version %d.%d ...\n",
+      fprintf( stderr, "WARNING : unable to determine then number of cores per multiprocessor for version %d.%d ...\n",
                DeviceProp.major, DeviceProp.minor );
 
 // get the version of driver and CUDA
-   int DriverVersion = 0, RuntimeVersion = 0;     
+   int DriverVersion = 0, RuntimeVersion = 0;
 
    cudaDriverGetVersion( &DriverVersion );
    cudaRuntimeGetVersion( &RuntimeVersion );
@@ -139,13 +156,13 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
    FILE *Note = fopen( FileName, "a" );
    fprintf( Note, "Device Diagnosis\n" );
    fprintf( Note, "***********************************************************************************\n" );
-   
+
    fprintf( Note, "hostname = %8s ; PID = %d\n\n", Host, PID );
    fprintf( Note, "CPU Info :\n" );
    fflush( Note );
 
    Aux_GetCPUInfo( FileName );
-   
+
    fprintf( Note, "\n" );
    fprintf( Note, "GPU Info :\n" );
    fprintf( Note, "Number of Devices                 : %d\n"    , DeviceCount );
@@ -156,9 +173,9 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
    fprintf( Note, "CUDA Major Revision Number        : %d\n"    , DeviceProp.major );
    fprintf( Note, "CUDA Minor Revision Number        : %d\n"    , DeviceProp.minor );
    fprintf( Note, "Clock Rate                        : %f GHz\n", DeviceProp.clockRate/1.e6);
-   fprintf( Note, "Global Memory Size                : %d MB\n" , DeviceProp.totalGlobalMem/1024/1024 ); 
-   fprintf( Note, "Constant Memory Size              : %d KB\n" , DeviceProp.totalConstMem/1024 ); 
-   fprintf( Note, "Shared Memory Size per Block      : %d KB\n" , DeviceProp.sharedMemPerBlock/1024 ); 
+   fprintf( Note, "Global Memory Size                : %d MB\n" , DeviceProp.totalGlobalMem/1024/1024 );
+   fprintf( Note, "Constant Memory Size              : %d KB\n" , DeviceProp.totalConstMem/1024 );
+   fprintf( Note, "Shared Memory Size per Block      : %d KB\n" , DeviceProp.sharedMemPerBlock/1024 );
    fprintf( Note, "Number of Registers per Block     : %d\n"    , DeviceProp.regsPerBlock );
    fprintf( Note, "Warp Size                         : %d\n"    , DeviceProp.warpSize );
    fprintf( Note, "Number of Multiprocessors:        : %d\n"    , DeviceProp.multiProcessorCount );
@@ -177,7 +194,7 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
 #  endif
 
    fprintf( Note, "\n\n" );
-   
+
    fprintf( Note, "***********************************************************************************\n" );
 
    fclose( Note );
@@ -192,6 +209,10 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
          GPU_NStream = 8;
 #        elif ( GPU_ARCH == KEPLER )
          GPU_NStream = 48;             // optimized for K40
+#        elif ( GPU_ARCH == MAXWELL )
+         GPU_NStream = 48;             // may have to be optimized for 980
+#        elif ( GPU_ARCH == PASCAL )
+         GPU_NStream = 48;             // may have to be optimized for 1080
 #        else
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
@@ -201,12 +222,16 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
          GPU_NStream = 1;
    }
 
-   if ( Pot_GPU_NPGroup == NULL_INT )     
+   if ( Pot_GPU_NPGroup == NULL_INT )
    {
 #     if   ( GPU_ARCH == FERMI )
       Pot_GPU_NPGroup = 2*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == KEPLER )
       Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // optimized for K40 (for GPU_NStream=48, NPGroup=480)
+#     elif ( GPU_ARCH == MAXWELL )
+      Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may have to be optimized for 980
+#     elif ( GPU_ARCH == PASCAL )
+      Pot_GPU_NPGroup = 32*DeviceProp.multiProcessorCount;  // may have to be optimized for 1080
 #     else
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
@@ -237,8 +262,8 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_GetCPUInfo
-// Description :  Record the CPU information 
-// 
+// Description :  Record the CPU information
+//
 // Parameter   :  FileName : Name of the output file
 //-------------------------------------------------------------------------------------------------------
 void Aux_GetCPUInfo( const char *FileName )
@@ -260,29 +285,29 @@ void Aux_GetCPUInfo( const char *FileName )
       return;
    }
 
-   while ( getline(&line, &len, CPUInfo) != -1 ) 
+   while ( getline(&line, &len, CPUInfo) != -1 )
    {
       sscanf( line, "%s%s", String[0], String[1] );
 
-      if (  strcmp( String[0], "model" ) == 0  &&  strcmp( String[1], "name" ) == 0  )    
+      if (  strcmp( String[0], "model" ) == 0  &&  strcmp( String[1], "name" ) == 0  )
       {
          strncpy( line, "CPU Type  ", 10 );
          fprintf( Note, "%s", line );
       }
 
-      if (  strcmp( String[0], "cpu" ) == 0  &&  strcmp( String[1], "MHz" ) == 0  )    
+      if (  strcmp( String[0], "cpu" ) == 0  &&  strcmp( String[1], "MHz" ) == 0  )
       {
          strncpy( line, "CPU MHz", 7 );
          fprintf( Note, "%s", line );
       }
 
-      if (  strcmp( String[0], "cache" ) == 0  &&  strcmp( String[1], "size" ) == 0  )    
+      if (  strcmp( String[0], "cache" ) == 0  &&  strcmp( String[1], "size" ) == 0  )
       {
          strncpy( line, "Cache Size", 10 );
          fprintf( Note, "%s", line );
       }
 
-      if (  strcmp( String[0], "cpu" ) == 0  &&  strcmp( String[1], "cores" ) == 0  )    
+      if (  strcmp( String[0], "cpu" ) == 0  &&  strcmp( String[1], "cores" ) == 0  )
       {
          strncpy( line, "CPU Cores", 9 );
          fprintf( Note, "%s", line );
@@ -290,7 +315,7 @@ void Aux_GetCPUInfo( const char *FileName )
       }
    }
 
-   if ( line != NULL )  
+   if ( line != NULL )
    {
       free( line );
       line = NULL;
@@ -309,7 +334,7 @@ void Aux_GetCPUInfo( const char *FileName )
       return;
    }
 
-   while ( getline(&line, &len, MemInfo) != -1 ) 
+   while ( getline(&line, &len, MemInfo) != -1 )
    {
       sscanf( line, "%s%s", String[0], String[1] );
 
@@ -320,7 +345,7 @@ void Aux_GetCPUInfo( const char *FileName )
       }
    }
 
-   if ( line != NULL )  
+   if ( line != NULL )
    {
       free( line );
       line = NULL;

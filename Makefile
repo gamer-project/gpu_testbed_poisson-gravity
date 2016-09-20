@@ -1,7 +1,7 @@
 
 
 
-# the name of the executable file 
+# the name of the executable file
 #######################################################################################################
 EXECUTABLE := PoissonGravity
 
@@ -21,7 +21,7 @@ SIMU_OPTION += -DINTEL
 # double precision
 #SIMU_OPTION += -DFLOAT8
 
-# GPU architecture: FERMI/KEPLER
+# GPU architecture: FERMI/KEPLER/MAXWELL/PASCAL
 SIMU_OPTION += -DGPU_ARCH=KEPLER
 
 # debug mode
@@ -125,6 +125,7 @@ endif
 # CUDA location
 # -------------------------------------------------------------------------------
 #CUDA_TOOLKIT_PATH := /usr/local/cuda
+#CUDA_TOOLKIT_PATH := /opt/gpu/cuda/default
 CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
 #CUDA_TOOLKIT_PATH := /export/cuda
 #CUDA_TOOLKIT_PATH := /usr/common/usg/cuda/4.0
@@ -150,10 +151,10 @@ endif
 
 INCLUDE := -I./Header
 
-COMMONFLAG := $(INCLUDE) $(SIMU_OPTION) $(SIMU_PARA) 
-  
+COMMONFLAG := $(INCLUDE) $(SIMU_OPTION) $(SIMU_PARA)
+
 ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-CXXWARN_FLAG := -w1 
+CXXWARN_FLAG := -w1
 else
 CXXWARN_FLAG := -Wall -Wextra -Wimplicit -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar \
                 -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function
@@ -183,16 +184,20 @@ ifeq      "$(findstring GPU_ARCH=FERMI, $(SIMU_OPTION))" "GPU_ARCH=FERMI"
    NVCCFLAG_COM += -gencode arch=compute_20,code=\"compute_20,sm_20\"
 else ifeq "$(findstring GPU_ARCH=KEPLER, $(SIMU_OPTION))" "GPU_ARCH=KEPLER"
    NVCCFLAG_COM += -gencode arch=compute_35,code=\"compute_35,sm_35\"
+else ifeq "$(findstring GPU_ARCH=MAXWELL, $(SIMU_OPTION))" "GPU_ARCH=MAXWELL"
+   NVCCFLAG_COM += -gencode arch=compute_52,code=\"compute_52,sm_52\"
+else ifeq "$(findstring GPU_ARCH=PASCAL, $(SIMU_OPTION))" "GPU_ARCH=PASCAL"
+   NVCCFLAG_COM += -gencode arch=compute_61,code=\"compute_61,sm_61\"
 else
    $(error unknown GPU_ARCH !!)
 endif
 
-NVCCFLAG_POT += -Xptxas -dlcm=ca 
+NVCCFLAG_POT += -Xptxas -dlcm=ca
 
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
-NVCCFLAG_COM += -O0 -D_DEBUG -g -G #-Xptxas -v #-deviceemu 
+NVCCFLAG_COM += -O0 -D_DEBUG -g -G #-Xptxas -v #-deviceemu
 else
-NVCCFLAG_COM += -O3
+NVCCFLAG_COM += -O3 # -lineinfo
 endif
 
 OBJ := $(patsubst %.cpp, $(OBJ_FILE_PATH)/%.o, $(CC_FILE))
@@ -204,10 +209,10 @@ $(OBJ_FILE_PATH)/%.o : %.cpp
 	 $(CXX) $(CXXFLAG) -o $@ -c $<
 
 $(OBJ_FILE_PATH)/CUAPI_%.o : $(CUDA_FILE_PATH)/CUAPI_%.cu
-	 $(NVCC) $(NVCCFLAG_COM) -o $@ -c $< 
+	 $(NVCC) $(NVCCFLAG_COM) -o $@ -c $<
 
 $(OBJ_FILE_PATH)/CUPOT_%.o : $(CUDA_FILE_PATH)/CUPOT_%.cu
-	 $(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -c $< 
+	 $(NVCC) $(NVCCFLAG_COM) $(NVCCFLAG_POT) -o $@ -c $<
 
 
 # link all object files
@@ -217,7 +222,7 @@ $(EXECUTABLE) : $(OBJ)
 	 cp $(EXECUTABLE) ./Run/
 
 
-clean : 
+clean :
 	 rm -f $(OBJ)
 	 rm -f $(EXECUTABLE)
 	 rm ./*linkinfo -f

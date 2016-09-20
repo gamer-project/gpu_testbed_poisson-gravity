@@ -1,0 +1,11 @@
+# use glob syntax.
+syntax: glob
+
+*.o
+err
+log*
+stdout
+stderr
+
+PoissonGravity
+Note

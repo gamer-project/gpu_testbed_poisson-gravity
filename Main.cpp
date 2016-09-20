@@ -318,7 +318,7 @@ timer_GPU->Stop( false );
 #  elif ( GPU_ARCH == KEPLER )
    fprintf( Note, "GPU_ARCH              : KEPLER\n" );
 #  else
-   fprintf( Note, "GPU_ARCH              : UNKOWN\n" );
+   fprintf( Note, "GPU_ARCH              : UNKNOWN\n" );
 #  endif
 
 #  ifdef GAMER_DEBUG

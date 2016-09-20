@@ -18,6 +18,7 @@
 #define FERMI     1
 #define KEPLER    2
 #define MAXWELL   3
+#define PASCAL    4
 
 
 // single/double precision
