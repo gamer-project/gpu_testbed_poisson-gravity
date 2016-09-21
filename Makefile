@@ -165,7 +165,7 @@ CXXWARN_FLAG += -Wno-unknown-pragmas
 endif
 
 ifeq "$(findstring INTEL, $(SIMU_OPTION))" "INTEL"
-CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -fast -mp1 #-O3
+CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3 -fp-model precise
 else
 CXXFLAG  := $(CXXWARN_FLAG) $(COMMONFLAG) $(OPENMP) -O3
 endif

@@ -284,7 +284,7 @@ void CPU_PoissonSolver_SOR( const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT
 
 // REPLACE in the actual implementation
 // #########################################################################
-         Aux_Message( stdout, "Patch %3d : number of iterations = %3d\n", P, Iter );
+         Aux_Message( stdout, "Patch %4d : number of iterations = %3d\n", P, Iter );
 
          AveIter += Iter;
 

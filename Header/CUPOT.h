@@ -23,7 +23,7 @@
 
 
 // experiments show that the following macros give lower performance even in Fermi GPUs
-/* 
+/*
 // faster integer multiplication in GPU
 #if ( defined __CUDACC__  &&  __CUDA_ARCH__ >= 200 )
    #define __umul24( a, b )   ( (a)*(b) )
@@ -85,7 +85,44 @@
 #  else
 #        define POT_BLOCK_SIZE_Z      1
 #  endif
-#endif
+#endif // POT_BLOCK_SIZE_Z
+
+
+// optimization options for CUPOT_PoissonSolver_SOR_10to14cube.cu
+#ifdef USE_PSOLVER_10TO14
+
+// load density into shared memory for higher performance
+#  ifndef FLOAT8
+#     define SOR_RHO_SHARED
+#  endif
+
+#  if ( POT_GHOST_SIZE == 5 )
+// use shuffle reduction
+// --> only work for POT_GHOST_SIZE == 5 since # threads must be a multiple of warpSize
+// --> although strickly speaking the shuffle functions do NOT work for double precision, but experiments
+//     show that residual_sum += (float)residual, where residual_sum is double, gives acceptable accuracy
+#  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL )
+#     define SOR_USE_SHUFFLE
+#  endif
+
+// use padding to reduce shared memory bank conflict (optimized for POT_GHOST_SIZE == 5 only)
+// --> does NOT work for FLOAT8 due to the lack of shared memory
+// --> does NOT work with FERMI GPUs because SOR_USE_PADDING requires POT_BLOCK_SIZE_Z == 8 but FERMI does NOT support that
+#  if (  ( GPU_ARCH == KEPLER || GPU_ARCH == MAXWELL || GPU_ARCH == PASCAL )  &&  !defined FLOAT8  )
+#     define SOR_USE_PADDING
+#  endif
+#  endif // #if ( POT_GHOST_SIZE == 5 )
+
+// frequency of reduction
+#  define SOR_MOD_REDUCTION 2
+
+// load coarse-grid potential into shared memory for higher performance
+#  if ( !defined FLOAT8  &&  !defined SOR_USE_PADDING )
+#     define SOR_CPOT_SHARED
+#  endif
+
+#endif // #ifdef USE_PSOLVER_10TO14
+
 
 
 // ###################
