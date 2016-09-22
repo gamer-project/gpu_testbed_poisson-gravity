@@ -42,6 +42,7 @@
 //                4. Reference : Numerical Recipes, Chapter 20.5
 //                5. Chester Cheng has implemented the SOR_USE_SHUFFLE and USE_PAADING optimizations, which
 //                   greatly improve performance for the case POT_GHOST_SIZE == 5
+//                6. Typically, the number of iterations required to reach round-off errors is 20 ~ 25 (single precision)
 //
 // Parameter   :  g_Rho_Array       : Global memory array to store the input density
 //                g_Pot_Array_In    : Global memory array storing the input "coarse-grid" potential for
