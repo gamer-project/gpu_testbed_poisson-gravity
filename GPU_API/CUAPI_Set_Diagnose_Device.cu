@@ -98,6 +98,37 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
    }
 #  endif
 
+// verify several limitations of the GPU SOR solver
+#  if ( POT_SCHEME == SOR )
+#     ifdef SOR_USE_SHUFFLE
+      if ( DeviceProp.warpSize != 32 )
+      {
+         fprintf( stderr, "ERROR : warp size (%d) != 32 !!\n", DeviceProp.warpSize );
+         MPI_Exit();
+      }
+
+      if ( DeviceProp.maxThreadsPerBlock > 1024 )
+      {
+         fprintf( stderr, "ERROR : maximum number of threads per block (%d) > 1024 !!\n", DeviceProp.maxThreadsPerBlock );
+         MPI_Exit();
+      }
+#     endif // #ifdef SOR_USE_SHUFFLE
+
+#     ifdef SOR_USE_PADDING
+      if ( DeviceProp.warpSize != 32 )
+      {
+         fprintf( stderr, "ERROR : warp size (%d) != 32 !!\n", DeviceProp.warpSize );
+         MPI_Exit();
+      }
+
+      if ( POT_BLOCK_SIZE_Z != 8 )
+      {
+         fprintf( stderr, "ERROR : POT_BLOCK_SIZE_Z (%d) != 8 !!\n", POT_BLOCK_SIZE_Z );
+         MPI_Exit();
+      }
+#     endif // #ifdef SOR_USE_PADDING
+#  endif // if ( POT_SCHEME == SOR )
+
 // verify the GPU architecture
 #  if   ( GPU_ARCH == FERMI )
    if ( DeviceProp.major != 2 )
