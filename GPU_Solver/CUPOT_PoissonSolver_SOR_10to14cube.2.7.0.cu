@@ -40,7 +40,7 @@
 //                3. Each patch requires about 3.1*10^6 FLOPS (include the gravity solver)
 //                   --> 133 GFLOPS is achieved in one C2050 GPU
 //                4. Reference : Numerical Recipes, Chapter 20.5
-//                5. Chester Cheng has implemented the SOR_USE_SHUFFLE and USE_PAADING optimizations, which
+//                5. Chester Cheng has implemented the SOR_USE_SHUFFLE and SOR_USE_PADDING optimizations, which
 //                   greatly improve performance for the case POT_GHOST_SIZE == 5
 //                6. Typically, the number of iterations required to reach round-off errors is 20 ~ 25 (single precision)
 //

@@ -50,7 +50,7 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
     gethostname( Host, 1024 );
     const int PID = getpid();
 
-// verify that there are GPU supporing CUDA
+// verify that there are GPU supporting CUDA
    int DeviceCount;
    cudaGetDeviceCount( &DeviceCount );
    if ( DeviceCount == 0 )
@@ -174,7 +174,7 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
    else if ( DeviceProp.major == 5 )                             NCorePerMP = 128;
    else if ( DeviceProp.major == 6 )                             NCorePerMP = 64;
    else
-      fprintf( stderr, "WARNING : unable to determine then number of cores per multiprocessor for version %d.%d ...\n",
+      fprintf( stderr, "WARNING : unable to determine the number of cores per multiprocessor for version %d.%d ...\n",
                DeviceProp.major, DeviceProp.minor );
 
 // get the version of driver and CUDA

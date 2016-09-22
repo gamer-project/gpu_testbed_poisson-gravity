@@ -40,6 +40,7 @@
 // determine the version of the GPU Poisson solver (10to14cube vs. 16to18cube)
 #define USE_PSOLVER_10TO14
 
+
 // blockDim.z for the GPU Poisson solver
 #if   ( POT_GHOST_SIZE == 1 )
 #        define POT_BLOCK_SIZE_Z      4
@@ -81,11 +82,11 @@
 #        endif
 #     else
 #        error : UNKOWN GPU_ARCH
-#     endif
+#     endif // GPU_ARCH
 #  else
 #        define POT_BLOCK_SIZE_Z      1
-#  endif
-#endif // POT_BLOCK_SIZE_Z
+#  endif // #ifdef USE_PSOLVER_10TO14 ... else ...
+#endif // POT_GHOST_SIZE
 
 
 // optimization options for CUPOT_PoissonSolver_SOR_10to14cube.cu
