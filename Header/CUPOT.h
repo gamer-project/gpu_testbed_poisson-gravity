@@ -118,7 +118,7 @@
 #  define SOR_MOD_REDUCTION 2
 
 // load coarse-grid potential into shared memory for higher performance
-#  if ( !defined FLOAT8  &&  !defined SOR_USE_PADDING )
+#  if ( !defined FLOAT8  &&  !defined SOR_USE_PADDING  &&  GPU_ARCH != KEPLER )
 #     define SOR_CPOT_SHARED
 #  endif
 
