@@ -52,7 +52,7 @@
 //                	POT_PAD   = 16 - (18 * 2 % 32) = 12  // number of floating point elements that needs to be added
 //                                                           // within thread groups
 //
-//                We now show how shared memory (s_FPot array) is accessed by a warp in residual evaluation
+//                We now show how shared memory (s_FPot array) is accessed by a warp in residual evaluation.
 //
 //                Before Padding:
 //                Thread number   |  Accessed shared memory bank
@@ -64,12 +64,17 @@
 //                After Padding:
 //                Thread number   |  Accessed shared memory bank
 //                	00 ~ 07   |    | 01 |    | 03 |    | 05 |    | 07 |    | 09 |    | 11 |    | 13 |    | 15 |    |    |
-//		        08 ~ 15   |    |    | 02 |    | 04 |    | 06 |    | 08 |    | 10 |    | 12 |    | 14 |    | 16 |    | i
-//
-//                      ---------------------- Pad 12 floating point elements here !!!!!!!!!!!! -----------------------------
-//
+//                      08 ~ 15   |    |    | 02 |    | 04 |    | 06 |    | 08 |    | 10 |    | 12 |    | 14 |    | 16 |    | 
+//                                ----------------- PAD 12 FLOATING POINTS HERE !!!!! ---------------------------------------
 //                      16 ~ 23   |    | 17 |    | 19 |    | 21 |    | 23 |    | 25 |    | 27 |    | 29 |    | 31 |    |    | 
 //                      24 ~ 31   |    |    | 18 |    | 20 |    | 22 |    | 24 |    | 26 |    | 28 |    | 30 |    | 00 |    | 
+//
+//
+//                Additional Notes for Padding:
+//               	1. When threads 08 ~ 15 access the elements below them (+y direction), we have to skip the padded
+//                         elements. Same for when threads 16~23 access the elements above them (-y direction). 
+//                      2. For every warp we need to pad #PAD_POT floating point elements. Each xy plane has 4 warps working 
+//                         on it, so for each xy plane we need to pad #4*PAD_POT floating point elements. 
 //
 //
 // Parameter   :  g_Rho_Array       : Global memory array to store the input density
@@ -110,10 +115,10 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    const uint dRhoID    = __umul24( bdim_z, RHO_NXT*RHO_NXT );
 #  ifdef SOR_USE_PADDING
    const uint dPotID    = __umul24( bdim_z, POT_NXT_F*POT_NXT_F + POT_PAD*4 );
-   const uint warpID    = ID % warpSize;
-   const uint pad_dy_0  = ( warpID >=  8 && warpID <= 15 ) ? dy + POT_PAD : dy;    // padding
-   const uint pad_dy_1  = ( warpID >= 16 && warpID <= 23 ) ? dy + POT_PAD : dy;    // padding
-   const uint pad_dz    = dz + POT_PAD*4;                                          // padding
+   const uint warpID    = ID % warpSize;                                           
+   const uint pad_dy_0  = ( warpID >=  8 && warpID <= 15 ) ? dy + POT_PAD : dy;    // 
+   const uint pad_dy_1  = ( warpID >= 16 && warpID <= 23 ) ? dy + POT_PAD : dy;    // Please refer to the Padding notes above!
+   const uint pad_dz    = dz + POT_PAD*4;                                          // 
    const uint pad_pot   = ( tid_y < 2 ) ? 0 : POT_PAD*((tid_y-2)/4 + 1);
 #  else
    const uint dPotID    = __umul24( bdim_z, POT_NXT_F*POT_NXT_F );
