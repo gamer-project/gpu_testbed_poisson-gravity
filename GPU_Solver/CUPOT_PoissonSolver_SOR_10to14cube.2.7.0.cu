@@ -1,7 +1,7 @@
 #include "Copyright.h"
 #include "Macro.h"
 #include "CUPOT.h"
-//#include "stdio.h"
+#include "stdio.h"
 
 #if ( defined GRAVITY  &&  defined GPU  &&  POT_SCHEME == SOR  &&  defined USE_PSOLVER_10TO14 )
 
@@ -43,6 +43,9 @@
 //                5. Chester Cheng has implemented the SOR_USE_SHUFFLE and SOR_USE_PADDING optimizations, which
 //                   greatly improve performance for the case POT_GHOST_SIZE == 5
 //                6. Typically, the number of iterations required to reach round-off errors is 20 ~ 25 (single precision)
+//
+// Padding     :
+//
 //
 // Parameter   :  g_Rho_Array       : Global memory array to store the input density
 //                g_Pot_Array_In    : Global memory array storing the input "coarse-grid" potential for
@@ -468,6 +471,9 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
       t += POT_NTHREAD;
    }
    while ( t < GRA_NXT*GRA_NXT*GRA_NXT );
+
+   if(ID == 0)
+	printf("%d ", POT_NXT_F);
 
 } // FUNCTION : CUPOT_PoissonSolver_SOR_10to14cube
 
