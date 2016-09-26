@@ -166,15 +166,6 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
 #  error : UNKNOWN GPU_ARCH !!
 #  endif
 
-// define warp size constant (Right now it's dependent on GPU architecture)
-// might have to use compute capability number to determine warp size in
-// the future, please refer to https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications
-// for information on warp size
-#  if (GPU_ARCH == FERMI) || (GPU_ARCH) == (KEPLER) || (GPU_ARCH == MAXWELL) || (GPU_ARCH == PASCAL)
-#  define WARP_SIZE = 32
-#  else
-#  error : UNKNOWN GPU_ARCH !!
-#  endif
 
 // get the number of cores per multiprocessor
    int NCorePerMP;
