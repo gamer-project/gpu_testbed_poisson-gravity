@@ -502,9 +502,6 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
    }
    while ( t < GRA_NXT*GRA_NXT*GRA_NXT );
 
-/*   if(ID == 0)
-	printf("%d ", POT_NXT_F);*/
-
 } // FUNCTION : CUPOT_PoissonSolver_SOR_10to14cube
 
 
