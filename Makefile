@@ -126,7 +126,7 @@ endif
 # -------------------------------------------------------------------------------
 #CUDA_TOOLKIT_PATH := /usr/local/cuda
 #CUDA_TOOLKIT_PATH := /opt/gpu/cuda/default
-CUDA_TOOLKIT_PATH := /usr/local/cuda/7.0
+CUDA_TOOLKIT_PATH := /usr/local/cuda-7.5
 #CUDA_TOOLKIT_PATH := /export/cuda
 #CUDA_TOOLKIT_PATH := /usr/common/usg/cuda/4.0
 # -------------------------------------------------------------------------------
