@@ -481,22 +481,22 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
 // d. store potential back to the global memory
 // -----------------------------------------------------------------------------------------------------------
    t = ID;
-
-#  ifdef SOR_USE_PADDING
-   const uint dy_global  = t % (GRA_NXT*GRA_NXT)/GRA_NXT;
-   const uint pad_global = ( dy_global < 3 ) ? POT_PAD : POT_PAD + POT_PAD*((dy_global-3)/4 + 1);
-#  else
-   const uint pad_global = 0;
-#  endif
-
+   
    do
    {
+#  ifdef SOR_USE_PADDING
+#  define GHOST_DIFF (POT_GHOST_SIZE - GRA_GHOST_SIZE - 1)
+      uint dy_global  = t % (GRA_NXT*GRA_NXT)/GRA_NXT;
+	  uint pad_global = ((dy_global + GHOST_DIFF) < 2) ? 0 : POT_PAD*((dy_global + GHOST_DIFF-2)/4 + 1);
+#  else
+      uint pad_global = 0;
+#  endif
       s_index =   __umul24(  t/(GRA_NXT*GRA_NXT)         + POT_GHOST_SIZE - GRA_GHOST_SIZE,  pad_dz  )
                 + __umul24(  t%(GRA_NXT*GRA_NXT)/GRA_NXT + POT_GHOST_SIZE - GRA_GHOST_SIZE,  dy  )
                 +            t%(GRA_NXT        )         + POT_GHOST_SIZE - GRA_GHOST_SIZE
                              + pad_global;
 
-      g_Pot_Array_Out[bid][t] = s_FPot[s_index];
+	g_Pot_Array_Out[bid][t] = s_FPot[s_index];
 
       t += POT_NTHREAD;
    }
