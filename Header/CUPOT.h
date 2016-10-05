@@ -66,7 +66,7 @@
 #        ifdef FLOAT8
 #        define POT_BLOCK_SIZE_Z      2
 #        else
-#        define POT_BLOCK_SIZE_Z      4
+#        define POT_BLOCK_SIZE_Z      8
 #        endif
 #     elif ( GPU_ARCH == MAXWELL )
 #        ifdef FLOAT8

@@ -123,7 +123,8 @@ void CUAPI_Set_Diagnose_Device( int &Pot_GPU_NPGroup, int &GPU_NStream, const in
 
       // in the new padding scheme, potential ghost size has to be 5, while
       // Block size z-dimension can be either 8 or 4
-      if( ( POT_BLOCK_SIZE_Z != 8 && POT_BLOCK_SIZE_Z != 4 ) || ( POT_GHOST_SIZE != 5) )
+      if( ( POT_BLOCK_SIZE_Z != 8 && POT_BLOCK_SIZE_Z != 4 && POT_BLOCK_SIZE_Z != 2 && POT_BLOCK_SIZE_Z != 1 ) \
+       || ( POT_GHOST_SIZE != 5) )
       {
          fprintf( stderr, "ERROR : POT_BLOCK_SIZE_Z (%d) != 8 !!\n", POT_BLOCK_SIZE_Z );
          MPI_Exit();
