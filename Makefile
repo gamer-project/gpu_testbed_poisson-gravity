@@ -40,7 +40,7 @@ SIMU_OPTION += -DGRAVITY
 PATCH_SIZE           = 8      # number of grids of a single patch in x, y, and z direction
 NEWTON_G             = 1.e-5  # Newtonian gravity constant
 POT_GHOST_SIZE       = 5      # number of ghost zones for the Poisson solver
-GRA_GHOST_SIZE       = 1      # number of ghost zones for advancing fluid by gravity
+GRA_GHOST_SIZE       = 3      # number of ghost zones for advancing fluid by gravity
 
 
 # other parameters

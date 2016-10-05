@@ -90,10 +90,6 @@ int main( int argc, char **argv )
       #error ERROR : the current GPU Poisson solver does NOT support POT_GHOST_SIZE > 5 !!
 #  endif
 
-/*#  if ( GRA_GHOST_SIZE != 1  &&  GRA_GHOST_SIZE != 2 )
-      #error ERROR : the current GPU Poisson and Gravity solvers only support GRA_GHOST_SIZE = 1 or 2 !!
-#  endif*/
-
 #  if ( POT_GHOST_SIZE < GRA_GHOST_SIZE )
       #error ERROR : POT_GHOST_SIZE < GRA_GHOST_SIZE !!
 #  endif
