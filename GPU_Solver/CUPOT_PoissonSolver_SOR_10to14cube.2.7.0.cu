@@ -48,22 +48,22 @@
 // Padding     :  Below shows how bank conflict is eliminated by padding.
 //                
 //                Example constants :
-//                	POT_NXT_F = 18                       // The number of floating point elements per row
-//                	POT_PAD   = 16 - (18 * 2 % 32) = 12  // number of floating point elements that needs to be added
+//                      POT_NXT_F = 18                       // The number of floating point elements per row
+//                      POT_PAD   = 16 - (18 * 2 % 32) = 12  // number of floating point elements that needs to be added
 //                                                           // within thread groups
 //
 //                We now show how shared memory (s_FPot array) is accessed by a warp in residual evaluation.
 //
 //                Before Padding:
 //                Thread number   |  Accessed shared memory bank
-//                	00 ~ 07   |    | 01 |    | 03 |    | 05 |    | 07 |    | 09 |    | 11 |    | 13 |    | 15 |    |    |
-//		        08 ~ 15   |    |    | 02 |    | 04 |    | 06 |    | 08 |    | 10 |    | 12 |    | 14 |    | 16 |    | 
+//                      00 ~ 07   |    | 01 |    | 03 |    | 05 |    | 07 |    | 09 |    | 11 |    | 13 |    | 15 |    |    |
+//                      08 ~ 15   |    |    | 02 |    | 04 |    | 06 |    | 08 |    | 10 |    | 12 |    | 14 |    | 16 |    | 
 //                      16 ~ 23   |    | 05 |    | 07 |    | 09 |    | 11 |    | 13 |    | 15 |    | 17 |    | 19 |    |    | 
 //                      24 ~ 31   |    |    | 06 |    | 08 |    | 10 |    | 12 |    | 14 |    | 16 |    | 18 |    | 20 |    | 
 //
 //                After Padding:
 //                Thread number   |  Accessed shared memory bank
-//                	00 ~ 07   |    | 01 |    | 03 |    | 05 |    | 07 |    | 09 |    | 11 |    | 13 |    | 15 |    |    |
+//                      00 ~ 07   |    | 01 |    | 03 |    | 05 |    | 07 |    | 09 |    | 11 |    | 13 |    | 15 |    |    |
 //                      08 ~ 15   |    |    | 02 |    | 04 |    | 06 |    | 08 |    | 10 |    | 12 |    | 14 |    | 16 |    | 
 //                                ----------------- PAD 12 FLOATING POINTS HERE !!!!! ---------------------------------------
 //                      16 ~ 23   |    | 17 |    | 19 |    | 21 |    | 23 |    | 25 |    | 27 |    | 29 |    | 31 |    |    | 
@@ -71,7 +71,7 @@
 //
 //
 //                Additional Notes for Padding:
-//               	1. When threads 08 ~ 15 access the elements below them (+y direction), we have to skip the padded
+//                      1. When threads 08 ~ 15 access the elements below them (+y direction), we have to skip the padded
 //                         elements. Same for when threads 16~23 access the elements above them (-y direction). 
 //                      2. For every warp we need to pad #PAD_POT floating point elements. Each xy plane has 4 warps working 
 //                         on it, so for each xy plane we need to pad #4*PAD_POT floating point elements. 
@@ -487,7 +487,7 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
 #  ifdef SOR_USE_PADDING
 #  define GHOST_DIFF (POT_GHOST_SIZE - GRA_GHOST_SIZE - 1)
       uint dy_global  = t % (GRA_NXT*GRA_NXT)/GRA_NXT;
-	  uint pad_global = ((dy_global + GHOST_DIFF) < 2) ? 0 : POT_PAD*((dy_global + GHOST_DIFF-2)/4 + 1);
+      uint pad_global = ((dy_global + GHOST_DIFF) < 2) ? 0 : POT_PAD*((dy_global + GHOST_DIFF-2)/4 + 1);
 #  else
       uint pad_global = 0;
 #  endif
@@ -496,7 +496,7 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
                 +            t%(GRA_NXT        )         + POT_GHOST_SIZE - GRA_GHOST_SIZE
                              + pad_global;
 
-	g_Pot_Array_Out[bid][t] = s_FPot[s_index];
+      g_Pot_Array_Out[bid][t] = s_FPot[s_index];
 
       t += POT_NTHREAD;
    }

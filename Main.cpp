@@ -90,9 +90,9 @@ int main( int argc, char **argv )
       #error ERROR : the current GPU Poisson solver does NOT support POT_GHOST_SIZE > 5 !!
 #  endif
 
-#  if ( GRA_GHOST_SIZE != 1  &&  GRA_GHOST_SIZE != 2 )
+/*#  if ( GRA_GHOST_SIZE != 1  &&  GRA_GHOST_SIZE != 2 )
       #error ERROR : the current GPU Poisson and Gravity solvers only support GRA_GHOST_SIZE = 1 or 2 !!
-#  endif
+#  endif*/
 
 #  if ( POT_GHOST_SIZE < GRA_GHOST_SIZE )
       #error ERROR : POT_GHOST_SIZE < GRA_GHOST_SIZE !!
@@ -185,7 +185,7 @@ timer_CPU->Start();
       CPU_PoissonGravitySolver       ( CPU_Rho_Array_P, CPU_Pot_Array_P_In, CPU_Pot_Array_P_Out, CPU_Flu_Array_G,
                                        POT_GPU_NPGROUP, DT, DH, SOR_MIN_ITER, SOR_MAX_ITER, SOR_OMEGA,
                                        MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR, 
-                                       4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, true );
+                                       4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, false );
       cout << "done" << endl;
 // =========================================================================================================
 timer_CPU->Stop( false );
@@ -203,7 +203,7 @@ timer_GPU->Start();
       CUAPI_Asyn_PoissonGravitySolver( GPU_Rho_Array_P, GPU_Pot_Array_P_In, GPU_Pot_Array_P_Out, GPU_Flu_Array_G,
                                        POT_GPU_NPGROUP, DT, DH, SOR_MIN_ITER, SOR_MAX_ITER, SOR_OMEGA, 
                                        MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR, 
-                                       4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, true, 
+                                       4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, false, 
                                        GPU_NSTREAM );
       CUAPI_Synchronize();
 
