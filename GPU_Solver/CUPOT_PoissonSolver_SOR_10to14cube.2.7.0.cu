@@ -7,10 +7,10 @@
 
 
 
-#define POT_NXT_F    ( PATCH_SIZE+2*POT_GHOST_SIZE              )
+#define POT_NXT_F    ( PATCH_SIZE+2*POT_GHOST_SIZE               )
 #define POT_PAD      ( WARP_SIZE/2 - (POT_NXT_F * 2 % WARP_SIZE) )
-#define POT_NTHREAD  ( RHO_NXT*RHO_NXT*POT_BLOCK_SIZE_Z/2       )
-#define POT_USELESS  ( POT_GHOST_SIZE%2                         )
+#define POT_NTHREAD  ( RHO_NXT*RHO_NXT*POT_BLOCK_SIZE_Z/2        )
+#define POT_USELESS  ( POT_GHOST_SIZE%2                          )
 
 
 /************************************************************
@@ -501,7 +501,11 @@ __global__ void CUPOT_PoissonSolver_SOR_10to14cube( const real g_Rho_Array    []
       t += POT_NTHREAD;
    }
    while ( t < GRA_NXT*GRA_NXT*GRA_NXT );
-
+   
+/*   if(ID==0) 
+   {
+      printf("%d ", POT_NTHREAD);
+   }*/
 } // FUNCTION : CUPOT_PoissonSolver_SOR_10to14cube
 
 
