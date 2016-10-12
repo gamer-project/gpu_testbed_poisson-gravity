@@ -3,9 +3,9 @@
 #include "Timer.h"
 
 #ifdef FLOAT8
-#  define POW  pow 
+#  define POW  pow
 #else
-#  define POW  powf 
+#  define POW  powf
 #endif
 
 
@@ -15,23 +15,23 @@ using namespace std;
 void Initialize( real Rho_Array[][RHO_NXT][RHO_NXT][RHO_NXT],
                  real Pot_Array[][POT_NXT][POT_NXT][POT_NXT],
                  real Flu_Array[][NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE] );
-void Output_Radial( const int P, 
-                    const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT], 
+void Output_Radial( const int P,
+                    const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                     const real Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
                     const real Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                     const char Comment[20] );
 void Output_Rho    ( const int P, const real Rho_Array[][RHO_NXT][RHO_NXT][RHO_NXT], const char FileName[20] );
 void Output_Pot_In ( const int P, const real Pot_Array[][POT_NXT][POT_NXT][POT_NXT], const char FileName[20] );
-void Output_Pot_Out( const int P, const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_NXT], const char FileName[20], 
+void Output_Pot_Out( const int P, const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_NXT], const char FileName[20],
                      const bool Binary );
-void Output_Flu( const int P, const real Flu_Array[][NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE], 
+void Output_Flu( const int P, const real Flu_Array[][NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE],
                  const char FileName[20], const bool Binary );
 void DataCompare();
 void AsynTest();
 void Init_Set_Default_SOR_Parameter();
 void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_Smooth, real &Tolerated_Error );
 void ReadParameters( int argc, char **argv, int &POT_GPU_NPGROUP, int &GPU_NSTREAM, int &GPU_ID, int &OMP_NTHREAD,
-                     IntScheme_t &INT_SCHEME, bool &OPT__GRA_P5_GRADIENT, bool &Performance_Test, 
+                     IntScheme_t &INT_SCHEME, bool &OPT__GRA_P5_GRADIENT, bool &Performance_Test,
                      bool &Asynchronous_Test );
 
 bool Performance_Test         = false;       // perform the performance test
@@ -41,7 +41,7 @@ int GPU_NSTREAM               = NULL_INT;
 int GPU_ID                    = 0;
 int OMP_NTHREAD               = NULL_INT;
 IntScheme_t INT_SCHEME        = INT_CQUAD;   // interpolation scheme (4/5 : conservative-quadratic/quadratic)
-bool OPT__GRA_P5_GRADIENT     = false;       // 5-point stencil for evaluating the potential gradient 
+bool OPT__GRA_P5_GRADIENT     = false;       // 5-point stencil for evaluating the potential gradient
 bool OutputData               = false;       // output initial and final data for the performance test
 
 Timer_t *timer_CPU        = NULL;
@@ -76,7 +76,7 @@ real MG_TOLERATED_ERROR=-1.0;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  main
-// Description :  
+// Description :
 //-------------------------------------------------------------------------------------------------------
 int main( int argc, char **argv )
 {
@@ -110,7 +110,7 @@ int main( int argc, char **argv )
 
 
 // read the command-line parameters
-   ReadParameters( argc, argv, POT_GPU_NPGROUP, GPU_NSTREAM, GPU_ID, OMP_NTHREAD, INT_SCHEME, 
+   ReadParameters( argc, argv, POT_GPU_NPGROUP, GPU_NSTREAM, GPU_ID, OMP_NTHREAD, INT_SCHEME,
                    OPT__GRA_P5_GRADIENT, Performance_Test, Asynchronous_Test  );
 
 
@@ -155,8 +155,8 @@ int main( int argc, char **argv )
    if ( Performance_Test )
    {
       cout << "Performance Test ... " << endl;
-   
-//    output the input density, coarse-grid potential, and input fluid array 
+
+//    output the input density, coarse-grid potential, and input fluid array
 //    (here we output all data to ensure that the memory is properly allocated before the timing measurements)
       if ( OutputData )
       {
@@ -180,8 +180,8 @@ timer_CPU->Start();
 
       CPU_PoissonGravitySolver       ( CPU_Rho_Array_P, CPU_Pot_Array_P_In, CPU_Pot_Array_P_Out, CPU_Flu_Array_G,
                                        POT_GPU_NPGROUP, DT, DH, SOR_MIN_ITER, SOR_MAX_ITER, SOR_OMEGA,
-                                       MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR, 
-                                       4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, false );
+                                       MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR,
+                                       4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, (GRA_GHOST_SIZE>0) );
       cout << "done" << endl;
 // =========================================================================================================
 timer_CPU->Stop( false );
@@ -197,9 +197,9 @@ timer_GPU->Start();
       cout << "   Invoking the GPU Poisson+Gravity solver ... " << flush;
 
       CUAPI_Asyn_PoissonGravitySolver( GPU_Rho_Array_P, GPU_Pot_Array_P_In, GPU_Pot_Array_P_Out, GPU_Flu_Array_G,
-                                       POT_GPU_NPGROUP, DT, DH, SOR_MIN_ITER, SOR_MAX_ITER, SOR_OMEGA, 
-                                       MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR, 
-                                       4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, false, 
+                                       POT_GPU_NPGROUP, DT, DH, SOR_MIN_ITER, SOR_MAX_ITER, SOR_OMEGA,
+                                       MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR,
+                                       4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, (GRA_GHOST_SIZE>0),
                                        GPU_NSTREAM );
       CUAPI_Synchronize();
 
@@ -373,11 +373,11 @@ timer_GPU->Stop( false );
 #     if ( POT_SCHEME == SOR )
       fprintf( Note, "Average Iteration     : %9.3f\n", AveIter/NPatch );
 #     endif
-      fprintf( Note, "CPU Processing Time   : %9.3f ms ( %8.4f ms/patch/step, %13.7e grids/sec )\n", 
-               timer_CPU->GetValue(0)*1.e3, timer_CPU->GetValue(0)/NPatch*1.e3, 
+      fprintf( Note, "CPU Processing Time   : %9.3f ms ( %8.4f ms/patch/step, %13.7e grids/sec )\n",
+               timer_CPU->GetValue(0)*1.e3, timer_CPU->GetValue(0)/NPatch*1.e3,
                NPatch*PS1*PS1*PS1/timer_CPU->GetValue(0) );
       fprintf( Note, "GPU Processing Time   : %9.3f ms ( %8.4f ms/patch/step, %13.7e grids/sec )\n",
-               timer_GPU->GetValue(0)*1.e3, timer_GPU->GetValue(0)/NPatch*1.e3, 
+               timer_GPU->GetValue(0)*1.e3, timer_GPU->GetValue(0)/NPatch*1.e3,
                NPatch*PS1*PS1*PS1/timer_GPU->GetValue(0) );
       fprintf( Note, "Speedup Ratio         : %9.3f\n", timer_CPU->GetValue(0)/timer_GPU->GetValue(0) );
       fprintf( Note, "\n\n");
@@ -388,7 +388,7 @@ timer_GPU->Stop( false );
    {
       fprintf( Note, "CUDA Asynchronous Test :\n" );
       fprintf( Note, "------------------------------------------------------------------------------\n" );
-      fprintf( Note, "CPU Array Size        : %8d KB\n"    , CPULOAD ); 
+      fprintf( Note, "CPU Array Size        : %8d KB\n"    , CPULOAD );
       fprintf( Note, "CPU Only  Time        : %8.3f ms\n"  , 1.e3*timer_CPU_Only->GetValue(0) );
       fprintf( Note, "GPU Only  Time        : %8.3f ms\n"  , 1.e3*timer_GPU_Only->GetValue(0) );
       fprintf( Note, "CPU + GPU Time        : %8.3f ms\n"  , 1.e3*timer_Concurrent->GetValue(0) );
@@ -399,7 +399,7 @@ timer_GPU->Stop( false );
    }
 
    fclose( Note );
-   
+
 
 // free memory
    CUAPI_MemFree_PoissonGravity( &GPU_Rho_Array_P, &GPU_Pot_Array_P_In, &GPU_Pot_Array_P_Out, &GPU_Flu_Array_G );
@@ -426,7 +426,7 @@ timer_GPU->Stop( false );
 // Description :  Read the command-line parameters
 //-------------------------------------------------------------------------------------------------------
 void ReadParameters( int argc, char **argv, int &POT_GPU_NPGROUP, int &GPU_NSTREAM, int &GPU_ID, int &OMP_NTHREAD,
-                     IntScheme_t &INT_SCHEME, bool &OPT__GRA_P5_GRADIENT, bool &Performance_Test, 
+                     IntScheme_t &INT_SCHEME, bool &OPT__GRA_P5_GRADIENT, bool &Performance_Test,
                      bool &Asynchronous_Test )
 {
 
@@ -449,25 +449,25 @@ void ReadParameters( int argc, char **argv, int &POT_GPU_NPGROUP, int &GPU_NSTRE
          case 'e' : MG_TOLERATED_ERROR   = atof(optarg);                break;
          case 'o' : OutputData           = true;                        break;
          case 'h' :
-         case '?' : cerr << endl << "usage: " << argv[0] 
-                    << " [-h (for help)] [-n # of patch groups] [-s # of CUDA streams] [-g GPU ID [0]]" 
-                    << endl << "                       " 
-                    << " [-t # of OpenMP threads (<=0 -> default value) [default]]" 
-                    << endl << "                       " 
-                    << " [-P (performance test) [off]] [-S (asynchronous test) [off]]" 
-                    << endl << "                       " 
-                    << " [-i (4/5)=(c-quad/quad) interpolation [4]]" 
-                    << endl << "                       " 
+         case '?' : cerr << endl << "usage: " << argv[0]
+                    << " [-h (for help)] [-n # of patch groups] [-s # of CUDA streams] [-g GPU ID [0]]"
+                    << endl << "                       "
+                    << " [-t # of OpenMP threads (<=0 -> default value) [default]]"
+                    << endl << "                       "
+                    << " [-P (performance test) [off]] [-S (asynchronous test) [off]]"
+                    << endl << "                       "
+                    << " [-i (4/5)=(c-quad/quad) interpolation [4]]"
+                    << endl << "                       "
                     << " [-p (0/1)=(3/5)-point stencil for potential gradient [0]]"
-                    << endl << "                       " 
-                    << " [-m maximum number of iterations for multigrid (<0 -> default value) [default]]" 
-                    << endl << "                       " 
-                    << " [-b number of pre-smoothing steps for multigrid (<0 -> default value) [default]]" 
-                    << endl << "                       " 
-                    << " [-a number of post-smoothing steps for multigrid (<0 -> default value) [default]]" 
-                    << endl << "                       " 
-                    << " [-e maximum tolerated error for multigrid (<0 -> default value) [default]]" 
-                    << endl << "                       " 
+                    << endl << "                       "
+                    << " [-m maximum number of iterations for multigrid (<0 -> default value) [default]]"
+                    << endl << "                       "
+                    << " [-b number of pre-smoothing steps for multigrid (<0 -> default value) [default]]"
+                    << endl << "                       "
+                    << " [-a number of post-smoothing steps for multigrid (<0 -> default value) [default]]"
+                    << endl << "                       "
+                    << " [-e maximum tolerated error for multigrid (<0 -> default value) [default]]"
+                    << endl << "                       "
                     << " [-o (output data) [off]]"
                     << endl;
                     exit( -1 );
@@ -481,11 +481,11 @@ void ReadParameters( int argc, char **argv, int &POT_GPU_NPGROUP, int &GPU_NSTRE
 
    if ( OMP_NTHREAD == NULL_INT  ||  OMP_NTHREAD <= 0 )  OMP_NTHREAD = OMP_Max_NThread;
    else if ( OMP_NTHREAD > OMP_Max_NThread )
-      fprintf( stderr, "WARNING : OMP_NTHREAD (%d) > omp_get_max_threads (%d) !!\n", 
+      fprintf( stderr, "WARNING : OMP_NTHREAD (%d) > omp_get_max_threads (%d) !!\n",
                OMP_NTHREAD, OMP_Max_NThread );
 
    omp_set_num_threads( OMP_NTHREAD );
-#  else 
+#  else
    if ( OMP_NTHREAD != NULL_INT )
       fprintf( stderr, "WARNING: the option \"-t\" has no effect if \"OPENMP\" is not turned on !!\n" );
 #  endif
@@ -567,7 +567,7 @@ void Initialize( real Rho_Array[][RHO_NXT][RHO_NXT][RHO_NXT],
 // initialize the input fluid data
    const real Width = 33.3;
 
-   for (int P=0; P<NPatch; P++)     {  Offset = INIT_OFFSET*P*DH; 
+   for (int P=0; P<NPatch; P++)     {  Offset = INIT_OFFSET*P*DH;
    for (int v=0; v<NCOMP; v++)      {
    for (int k=0; k<PATCH_SIZE; k++) {  z      = (k+0.5)*DH + Offset;
    for (int j=0; j<PATCH_SIZE; j++) {  y      = (j+0.5)*DH;
@@ -583,15 +583,15 @@ void Initialize( real Rho_Array[][RHO_NXT][RHO_NXT][RHO_NXT],
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_Radial
-// Description :  output the radial distribution of input variables 
+// Description :  output the radial distribution of input variables
 //
-// Note        :  it also compare the simulation results with the analytical solutions 
+// Note        :  it also compare the simulation results with the analytical solutions
 //
 // Parameter   :  P >= 0 --> output the patch "P"
 //                  <  0 --> output all patches
 //-------------------------------------------------------------------------------------------------------
-void Output_Radial( const int P, 
-                    const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT], 
+void Output_Radial( const int P,
+                    const real Rho_Array    [][RHO_NXT][RHO_NXT][RHO_NXT],
                     const real Pot_Array_In [][POT_NXT][POT_NXT][POT_NXT],
                     const real Pot_Array_Out[][GRA_NXT][GRA_NXT][GRA_NXT],
                     const char Comment[20] )
@@ -612,7 +612,7 @@ void Output_Radial( const int P,
    if ( P < 0 )
    {
       StartP = 0;
-      EndP   = NPatch-1; 
+      EndP   = NPatch-1;
    }
 
    else
@@ -665,7 +665,7 @@ void Output_Radial( const int P,
    for (int j=0; j<POT_NXT; j++)             {  y      = (j+0.5)*DH2;
    for (int i=0; i<POT_NXT; i++)             {  x      = (i+0.5)*DH2;
 
-      Radius = sqrtf( (x-C_PotIn[0])*(x-C_PotIn[0]) + (y-C_PotIn[1])*(y-C_PotIn[1]) + 
+      Radius = sqrtf( (x-C_PotIn[0])*(x-C_PotIn[0]) + (y-C_PotIn[1])*(y-C_PotIn[1]) +
                       (z-C_PotIn[2])*(z-C_PotIn[2]) );
 
       fprintf( File2, "%14.7e\t\t%14.7e\n", Radius, Pot_Array_In[PID][k][j][i] );
@@ -694,7 +694,7 @@ void Output_Radial( const int P,
    for (int j=GRA_GHOST_SIZE; j<GRA_GHOST_SIZE+PATCH_SIZE; j++)   {  y      = (j+0.5)*DH;
    for (int i=GRA_GHOST_SIZE; i<GRA_GHOST_SIZE+PATCH_SIZE; i++)   {  x      = (i+0.5)*DH;
 
-      Radius = sqrtf( (x-C_PotOut[0])*(x-C_PotOut[0]) + (y-C_PotOut[1])*(y-C_PotOut[1]) + 
+      Radius = sqrtf( (x-C_PotOut[0])*(x-C_PotOut[0]) + (y-C_PotOut[1])*(y-C_PotOut[1]) +
                       (z-C_PotOut[2])*(z-C_PotOut[2]) );
 
       SolPot  = Pot_Array_Out[PID][k][j][i];
@@ -719,7 +719,7 @@ void Output_Radial( const int P,
 //                  <  0 --> output all patches
 //             :  Binary = (true / false) --> output the (binary / text) data
 //-------------------------------------------------------------------------------------------------------
-void Output_Flu( const int P, const real Flu_Array[][NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE], 
+void Output_Flu( const int P, const real Flu_Array[][NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE],
                  const char FileName[20], const bool Binary )
 {
 
@@ -738,7 +738,7 @@ void Output_Flu( const int P, const real Flu_Array[][NCOMP][PATCH_SIZE][PATCH_SI
    if ( P < 0 )
    {
       StartP = 0;
-      EndP   = NPatch-1; 
+      EndP   = NPatch-1;
    }
 
    else
@@ -763,17 +763,17 @@ void Output_Flu( const int P, const real Flu_Array[][NCOMP][PATCH_SIZE][PATCH_SI
    {
       FILE *File = fopen( FileName, "w" );
 
-      fprintf( File, "%4s %2s %2s %2s  %14s  %14s  %14s  %14s  %14s\n", 
-               "PID", "i", "j", "k", "Rho", "Px", "Py", "Pz", "Egy" ); 
+      fprintf( File, "%4s %2s %2s %2s  %14s  %14s  %14s  %14s  %14s\n",
+               "PID", "i", "j", "k", "Rho", "Px", "Py", "Pz", "Egy" );
 
       for (int PID=StartP; PID<=EndP; PID++)
       for (int k=0; k<PATCH_SIZE; k++)
       for (int j=0; j<PATCH_SIZE; j++)
       for (int i=0; i<PATCH_SIZE; i++)
       {
-         fprintf( File, "%4d %2d %2d %2d  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e\n", 
-                  PID, i, j, k, 
-                  Flu_Array[PID][0][k][j][i], Flu_Array[PID][1][k][j][i], Flu_Array[PID][2][k][j][i], 
+         fprintf( File, "%4d %2d %2d %2d  %14.7e  %14.7e  %14.7e  %14.7e  %14.7e\n",
+                  PID, i, j, k,
+                  Flu_Array[PID][0][k][j][i], Flu_Array[PID][1][k][j][i], Flu_Array[PID][2][k][j][i],
                   Flu_Array[PID][3][k][j][i], Flu_Array[PID][4][k][j][i] );
       }
 
@@ -809,7 +809,7 @@ void Output_Rho( const int P, const real Rho_Array[][RHO_NXT][RHO_NXT][RHO_NXT],
    if ( P < 0 )
    {
       StartP = 0;
-      EndP   = NPatch-1; 
+      EndP   = NPatch-1;
    }
 
    else
@@ -875,7 +875,7 @@ void Output_Pot_In( const int P, const real Pot_Array[][POT_NXT][POT_NXT][POT_NX
    if ( P < 0 )
    {
       StartP = 0;
-      EndP   = NPatch-1; 
+      EndP   = NPatch-1;
    }
 
    else
@@ -924,7 +924,7 @@ void Output_Pot_In( const int P, const real Pot_Array[][POT_NXT][POT_NXT][POT_NX
 //                  <  0 --> output all patches
 //             :  Binary = (true / false) --> output the (binary / text) data
 //-------------------------------------------------------------------------------------------------------
-void Output_Pot_Out( const int P, const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_NXT], const char FileName[20], 
+void Output_Pot_Out( const int P, const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_NXT], const char FileName[20],
                      const bool Binary )
 {
 
@@ -943,7 +943,7 @@ void Output_Pot_Out( const int P, const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_N
    if ( P < 0 )
    {
       StartP = 0;
-      EndP   = NPatch-1; 
+      EndP   = NPatch-1;
    }
 
    else
@@ -991,7 +991,7 @@ void Output_Pot_Out( const int P, const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_N
 
             fprintf( File, "\n\n" );
          }
-      } 
+      }
 
       fclose( File );
    }
@@ -1002,7 +1002,7 @@ void Output_Pot_Out( const int P, const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_N
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  DataCompare
-// Description :  compare the CPU and GPU results 
+// Description :  compare the CPU and GPU results
 //-------------------------------------------------------------------------------------------------------
 void DataCompare()
 {
@@ -1021,10 +1021,10 @@ void DataCompare()
       Err = fabsf(  ( CPU_Pot_Array_P_Out[P][k][j][i] - GPU_Pot_Array_P_Out[P][k][j][i] )
                     / CPU_Pot_Array_P_Out[P][k][j][i]  );
 
-      if ( Err > POI_MAXERR ) 
+      if ( Err > POI_MAXERR )
       {
          fprintf( stderr, "Patch %3d, (i,j,k) = (%d, %d, %d), CPU = %14.7e, GPU = %14.7e, Err = %14.7e\n",
-                  P, i, j, k, CPU_Pot_Array_P_Out[P][k][j][i], GPU_Pot_Array_P_Out[P][k][j][i], Err );  
+                  P, i, j, k, CPU_Pot_Array_P_Out[P][k][j][i], GPU_Pot_Array_P_Out[P][k][j][i], Err );
 
          Pass = false;
       }
@@ -1033,7 +1033,7 @@ void DataCompare()
    if ( Pass )    fprintf( stdout, "   Accuracy check of potential : Passed !!\n" );
    else           fprintf( stdout, "   Accuracy check of potential : Failed !!\n" );
 
-   
+
 // compare the fluid data
    Pass = true;
 
@@ -1046,10 +1046,10 @@ void DataCompare()
       Err = fabsf(  ( CPU_Flu_Array_G[P][v][k][j][i] - GPU_Flu_Array_G[P][v][k][j][i] )
                     / CPU_Flu_Array_G[P][v][k][j][i]  );
 
-      if ( Err > GRA_MAXERR ) 
+      if ( Err > GRA_MAXERR )
       {
          fprintf( stderr, "Patch %3d, (i,j,k,v) = (%d, %d, %d, %d), CPU = %14.7e, GPU = %14.7e, Err = %14.7e\n",
-                  P, i, j, k, v, CPU_Flu_Array_G[P][v][k][j][i], GPU_Flu_Array_G[P][v][k][j][i], Err ); 
+                  P, i, j, k, v, CPU_Flu_Array_G[P][v][k][j][i], GPU_Flu_Array_G[P][v][k][j][i], Err );
 
          Pass = false;
       }
@@ -1066,7 +1066,7 @@ void DataCompare()
 // Function    :  AsynTest
 // Description :  test the concurrent execution between CPU and GPU
 //----------------------------------------------------------------------
-void AsynTest() 
+void AsynTest()
 {
 
    cout << "Asynchronous Test ... " << flush;
@@ -1095,9 +1095,9 @@ timer_CPU_Only->Stop( false );
 timer_GPU_Only->Start();
 
    CUAPI_Asyn_PoissonGravitySolver( GPU_Rho_Array_P, GPU_Pot_Array_P_In, GPU_Pot_Array_P_Out, GPU_Flu_Array_G,
-                                    POT_GPU_NPGROUP, DT, DH, SOR_MIN_ITER, SOR_MAX_ITER, SOR_OMEGA, 
-                                    MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR, 
-                                    4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, true, 
+                                    POT_GPU_NPGROUP, DT, DH, SOR_MIN_ITER, SOR_MAX_ITER, SOR_OMEGA,
+                                    MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR,
+                                    4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, true,
                                     GPU_NSTREAM );
    CUAPI_Synchronize();
 
@@ -1109,8 +1109,8 @@ timer_GPU_Only->Stop( false );
 timer_Concurrent->Start();
 
    CUAPI_Asyn_PoissonGravitySolver( GPU_Rho_Array_P, GPU_Pot_Array_P_In, GPU_Pot_Array_P_Out, GPU_Flu_Array_G,
-                                    POT_GPU_NPGROUP, DT, DH, SOR_MIN_ITER, SOR_MAX_ITER, SOR_OMEGA, 
-                                    MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR, 
+                                    POT_GPU_NPGROUP, DT, DH, SOR_MIN_ITER, SOR_MAX_ITER, SOR_OMEGA,
+                                    MG_MAX_ITER, MG_NPRE_SMOOTH, MG_NPOST_SMOOTH, MG_TOLERATED_ERROR,
                                     4.0*M_PI*NEWTON_G, INT_SCHEME, OPT__GRA_P5_GRADIENT, true, true,
                                     GPU_NSTREAM );
 
@@ -1121,7 +1121,7 @@ timer_Concurrent->Start();
 timer_Concurrent->Stop( false );
 
 
-   if ( CPUArray[ArraySize-1] != ArraySize+1 )  
+   if ( CPUArray[ArraySize-1] != ArraySize+1 )
       fprintf( stderr, "Error : incorrect result for CPU in the asynchronous test!!\n" );
 
    delete [] CPUArray;
@@ -1135,7 +1135,7 @@ timer_Concurrent->Stop( false );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Set_Default_SOR_Parameter
-// Description :  set the SOR parameters by the default values 
+// Description :  set the SOR parameters by the default values
 //
 // Note        :  the default values are determined empirically from the cosmological simulations
 //-------------------------------------------------------------------------------------------------------
@@ -1151,8 +1151,8 @@ void Init_Set_Default_SOR_Parameter()
    const int  Default_MinIter  = 10;
 
    SOR_OMEGA    = Default_Omega[POT_GHOST_SIZE-1];
-   SOR_MAX_ITER = Default_MaxIter; 
-   SOR_MIN_ITER = Default_MinIter; 
+   SOR_MAX_ITER = Default_MaxIter;
+   SOR_MIN_ITER = Default_MinIter;
 
 }
 
@@ -1160,7 +1160,7 @@ void Init_Set_Default_SOR_Parameter()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_Set_Default_MG_Parameter
-// Description :  Set the multigrid parameters by the default values 
+// Description :  Set the multigrid parameters by the default values
 //
 // Note        :  1. Work only when the corresponding input parameters are negative
 //                2. Default values are determined empirically
@@ -1188,15 +1188,15 @@ void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_
    const int  Default_NPre_Smooth     = 3;
    const int  Default_NPost_Smooth    = 3;
 
-   if ( Max_Iter < 0 )     
+   if ( Max_Iter < 0 )
    {
-      Max_Iter = Default_Max_Iter; 
+      Max_Iter = Default_Max_Iter;
 
       if ( MPI_Rank == 0 )  Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d\n",
                                          "MG_MAX_ITER", Default_Max_Iter );
    }
 
-   if ( NPre_Smooth < 0 )     
+   if ( NPre_Smooth < 0 )
    {
       NPre_Smooth = Default_NPre_Smooth;
 
@@ -1204,7 +1204,7 @@ void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_
                                          "MG_NPRE_SMOOTH", Default_NPre_Smooth );
    }
 
-   if ( NPost_Smooth < 0 )     
+   if ( NPost_Smooth < 0 )
    {
       NPost_Smooth = Default_NPost_Smooth;
 
@@ -1212,7 +1212,7 @@ void Init_Set_Default_MG_Parameter( int &Max_Iter, int &NPre_Smooth, int &NPost_
                                          "MG_NPOST_SMOOTH", Default_NPost_Smooth );
    }
 
-   if ( Tolerated_Error < 0.0 )     
+   if ( Tolerated_Error < 0.0 )
    {
       Tolerated_Error = Default_Tolerated_Error;
 

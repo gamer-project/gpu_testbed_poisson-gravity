@@ -20,10 +20,10 @@
 #define MAXWELL   3
 #define PASCAL    4
 
-// define warp size constant (Right now it's dependent on GPU architecture)
-// might have to use compute capability number to determine warp size in
-// the future, please refer to https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications
-// for information on warp size
+// define warp size constant (right now it's dependent on GPU architecture)
+// --> might have to use compute capability number to determine warp size in the future
+// --> please refer to https://en.wikipedia.org/wiki/CUDA#Version_features_and_specifications
+//     for information on warp size
 #  if (GPU_ARCH == FERMI) || (GPU_ARCH) == (KEPLER) || (GPU_ARCH == MAXWELL) || (GPU_ARCH == PASCAL)
 #  define WARP_SIZE 32
 #  else

@@ -97,7 +97,7 @@
 #     define SOR_RHO_SHARED
 #  endif
 
-//#  if ( POT_GHOST_SIZE == 5 )
+#  if ( POT_GHOST_SIZE == 5 )
 // use shuffle reduction
 // --> only work for POT_GHOST_SIZE == 5 since # threads must be a multiple of warpSize
 // --> although strickly speaking the shuffle functions do NOT work for double precision, but experiments
@@ -112,7 +112,7 @@
 #  if (  ( GPU_ARCH == KEPLER || GPU_ARCH == MAXWELL || GPU_ARCH == PASCAL )  &&  !defined FLOAT8  )
 #     define SOR_USE_PADDING
 #  endif
-//#  endif // #if ( POT_GHOST_SIZE == 5 )
+#  endif // #if ( POT_GHOST_SIZE == 5 )
 
 // frequency of reduction
 #  define SOR_MOD_REDUCTION 2
