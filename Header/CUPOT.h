@@ -108,8 +108,7 @@
 
 // use padding to reduce shared memory bank conflict (optimized for POT_GHOST_SIZE == 5 only)
 // --> does NOT work for FLOAT8 due to the lack of shared memory
-// --> does NOT work with FERMI GPUs because SOR_USE_PADDING requires POT_BLOCK_SIZE_Z == 8 but FERMI does NOT support that
-#  if (  ( GPU_ARCH == KEPLER || GPU_ARCH == MAXWELL || GPU_ARCH == PASCAL )  &&  !defined FLOAT8  )
+#  ifndef FLOAT8
 #     define SOR_USE_PADDING
 #  endif
 #  endif // #if ( POT_GHOST_SIZE == 5 )
