@@ -72,13 +72,15 @@
 #        ifdef FLOAT8
 #        define POT_BLOCK_SIZE_Z      2
 #        else
-#        define POT_BLOCK_SIZE_Z      8
+//#        define POT_BLOCK_SIZE_Z      8
+#        define POT_BLOCK_SIZE_Z      4
 #        endif
 #     elif ( GPU_ARCH == PASCAL )
 #        ifdef FLOAT8
 #        define POT_BLOCK_SIZE_Z      2
 #        else
-#        define POT_BLOCK_SIZE_Z      8
+//#        define POT_BLOCK_SIZE_Z      8
+#        define POT_BLOCK_SIZE_Z      4
 #        endif
 #     else
 #        error : UNKOWN GPU_ARCH
